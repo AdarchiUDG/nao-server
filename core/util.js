@@ -3,7 +3,7 @@ const AppRequest = require('./app-request.js')
 module.exports = {
   handler: (app, req, res) => {
 		const endpoint = app.endpoints.find(req)
-		const beforeLoad = []
+		const callsBeforeEndpoint = app.beforeEndpoint.find(req, true)
 
     if (endpoint) {
       let body = ''
@@ -28,12 +28,18 @@ module.exports = {
 				}
 				
 				try {
-
 					const appRequest = new AppRequest(app.public, req, res, body)
 					appRequest.loadView = (filename) => {
 						return app.loadFile('views', filename)
 					}
-					endpoint(appRequest, ...req.arguments)
+
+					for (const call of callsBeforeEndpoint) {
+						appRequest.params = call.params
+						call.action(appRequest, ...call.arguments)
+					}
+
+					appRequest.params = endpoint.params
+					endpoint.action(appRequest, ...endpoint.arguments)
 					if (!res.finished) {
 						res.end()
 					}

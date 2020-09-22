@@ -27,7 +27,7 @@ function App(settings = { }) {
     ...settings
   }
 
-  this.beforeLoad = new EndpointCollection()
+  this.beforeEndpoint = new EndpointCollection()
   this.endpoints = new EndpointCollection()
   this.assetEndpoints = new EndpointCollection()
 
@@ -98,6 +98,12 @@ function App(settings = { }) {
     delete: (route, callback) => {
       this.endpoints.add(route, 'delete', callback)
       return this.public
+    },
+    beforeEndpointCall: (route, callback) => {
+      this.beforeEndpoint.add(route, 'get', callback, false)
+      this.beforeEndpoint.add(route, 'post', callback, false)
+      this.beforeEndpoint.add(route, 'put', callback, false)
+      this.beforeEndpoint.add(route, 'delete', callback, false)
     },
     autoload: (path) => {
       if (!path.endsWith('/')) {

@@ -1,5 +1,5 @@
 class AppRequest {
-  constructor(app, req, res, body, params) {
+  constructor(app, req, res, body, params = null) {
     this.app = app
 		this.req = req
 		this.res = res

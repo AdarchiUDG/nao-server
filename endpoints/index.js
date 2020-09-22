@@ -7,7 +7,7 @@ module.exports = {
 			action: client => {
 				client.send('<h1>Hello World!</h1>')
 			}
-		},
+    },
 		{
 			route: '/post',
 			method: 'post',

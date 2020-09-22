@@ -43,14 +43,17 @@ class EndpointCollection {
 				if (endpoint.route.endsWith('/*')) {
 					matches.push(matches.pop().split('/').slice(0, -1))
 				}
-
-				req.params = url.searchParams
-				req.arguments = matches.slice(1)
+        
+        const endpointData = {
+          action: endpoint.methods[method],
+          params: url.searchParams,
+          arguments: matches.slice(1)
+        }
 
         if (all) {
-          found.push(endpoints.methods[method])
+          found.push(endpointData)
         } else {
-          found = endpoint.methods[method]
+          found = endpointData
           break
         }
 			}
