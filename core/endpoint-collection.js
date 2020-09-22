@@ -25,7 +25,7 @@ class EndpointCollection {
 		route = Endpoint.cleanRoute(route)
 		let endpoint = this.endpoints[route]
 
-		return typeof endpoint?.methods[method] === 'function'
+		return endpoint && typeof endpoint.methods[method] === 'function'
 	}
 
 	find(req, all = false) {	

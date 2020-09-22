@@ -25,7 +25,7 @@ class Endpoint {
 	}
 
 	setMethod(method, callback) {
-    method = method?.toLowerCase()
+    method = typeof method === 'string' ? method.toLowerCase() : ''
 		if (this.methods[method] !== undefined && typeof callback === 'function') {
 			this.methods[method] = callback
 		}
