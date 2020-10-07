@@ -1,0 +1,27 @@
+{
+  "name": "nao-server",
+  "version": "0.0.3",
+  "description": "A simple Node.js based server",
+  "main": "core/server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AdarchiUDG/nao-server.git"
+  },
+  "keywords": [
+    "server",
+    "simple",
+    "handlebars"
+  ],
+  "author": "Christian Belmonte",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/AdarchiUDG/nao-server/issues"
+  },
+  "homepage": "https://github.com/AdarchiUDG/nao-server#readme",
+  "dependencies": {
+    "handlebars": "^4.7.6"
+  }
+}

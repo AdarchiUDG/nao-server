@@ -5,7 +5,7 @@ module.exports = {
 			route: '/',
 			method: 'all',
 			action: client => {
-				client.send('<h1>Hello World!</h1>')
+				client.send('<p>Hello world!</p>')
 			}
     },
 		{

@@ -1,4 +1,20 @@
 const AppRequest = require('./app-request.js')
+const AsyncFunction = (async () => { }).constructor
+
+const executeEndpoint = (endpoint, appRequest) => {
+	return new Promise((resolve, reject) => {
+		appRequest.params = endpoint.params
+		if (endpoint.action instanceof AsyncFunction) {
+			appRequest.resolve = resolve
+			appRequest.reject = reject
+	
+			endpoint.action(appRequest, ...endpoint.arguments)
+		} else {
+			resolve(endpoint.action(appRequest, ...endpoint.arguments))
+		}
+	})
+	
+}
 
 module.exports = {
   handler: (app, req, res) => {
@@ -16,7 +32,7 @@ module.exports = {
         })
       }
 
-      req.on('end', () => {
+      req.on('end', async () => {
         try {
 					if (body) {
 						body = JSON.parse(body)
@@ -28,22 +44,24 @@ module.exports = {
 				}
 				
 				try {
-					const appRequest = new AppRequest(app.public, req, res, body)
-					appRequest.loadView = (filename) => {
-						return app.loadFile('views', filename)
-					}
+					const appRequest = new AppRequest(app, req, res, body)
 
+					let continueCalls = true
 					for (const call of callsBeforeEndpoint) {
-						appRequest.params = call.params
-						call.action(appRequest, ...call.arguments)
+						await executeEndpoint(call, appRequest)
+						if (appRequest.stopped === true) {
+							break
+						}
+					}
+					if (appRequest.stopped !== true) {
+						await executeEndpoint(endpoint, appRequest) 
 					}
 
-					appRequest.params = endpoint.params
-					endpoint.action(appRequest, ...endpoint.arguments)
 					if (!res.finished) {
 						res.end()
 					}
 				} catch (e) {
+					console.log(e)
 					app.getError(500).send(res)
 				}
       })

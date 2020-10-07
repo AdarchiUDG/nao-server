@@ -1,7 +1,14 @@
 class AppError {
   constructor(code = 403, content = '', type = 'text/html; charset=utf-8') {
     this.code = code
-    this.content = typeof content === 'function' ? content() : content.toString()
+    if (typeof content === 'function') {
+      this.content = content()
+    } else if (typeof content === 'object') {
+      this.content = JSON.stringify(content)
+      type = 'application/json; charset=utf-8'
+    } else {
+      this.content = content
+    }
     this.type = type
   }
 
