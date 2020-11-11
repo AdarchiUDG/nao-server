@@ -1,11 +1,8 @@
 const Endpoint = require('./endpoint.js')
 
-function getHost(req) {
-	return 
-}
-
 class EndpointCollection {
-	constructor() {
+	constructor(allowed = ['get', 'post', 'put', 'delete', 'head']) {
+		this.allowed = allowed
 		this.endpoints = {}
 	}
 
@@ -13,7 +10,7 @@ class EndpointCollection {
 		route = Endpoint.cleanRoute(route)
 		let endpoint = this.endpoints[route]
 		if (endpoint === undefined) {
-			this.endpoints[route] = endpoint = new Endpoint(route)
+			this.endpoints[route] = endpoint = new Endpoint(route, this.allowed)
 		}
 
 		if (overwrite || !endpoint.methods[method]) {
@@ -38,7 +35,7 @@ class EndpointCollection {
     
 		for (let route in this.endpoints) {
 			const endpoint = this.endpoints[route]
-			if (endpoint.routeRegex.test(url.pathname) && typeof endpoint.methods[method] === 'function') {
+			if (typeof endpoint.methods[method] === 'function' && endpoint.routeRegex.test(url.pathname)) {
 				const matches = url.pathname.match(endpoint.routeRegex)
 				if (endpoint.route.endsWith('/*')) {
 					matches.push(matches.pop().split('/').slice(0, -1))

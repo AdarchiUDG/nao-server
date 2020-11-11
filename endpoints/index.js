@@ -1,19 +1,15 @@
 module.exports = {
-	prefix: '',
-	routes: [
-		{
-			route: '/',
-			method: 'all',
-			action: client => {
-				client.send('<p>Hello world!</p>')
-			}
-    },
-		{
-			route: '/post',
-			method: 'post',
-			action: client => {
-				client.json(client.body)
-			}
-		}
-	]
+  prefix: '',
+  routes: [
+    {
+      route: '/',
+      method: 'get',
+      action: client => {
+        client.send(client.render('index.html', {
+          title: 'Hello world',
+          content: 'Testing templates using Handlebars'
+        }))
+      }
+    }
+  ]
 }

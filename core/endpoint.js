@@ -10,17 +10,15 @@ class Endpoint {
 		return route
   }
 
-  constructor(route) {
+  constructor(route, allowed) {
 		this.route = route
 		this.escapedRoute = this.route.replace(/\/\*$/, '/(.*)')
 		// this.escapedRoute = escapeRegExp(this.route).replace(/\/\\\*$/, '\/(.*)')
 		this.routeRegex = new RegExp('^' + this.escapedRoute.replace(Endpoint.pathRegex, '/([^/]+?)') + '$')
 
-		this.methods = {
-			'get': null,
-			'post': null,
-			'put': null,
-			'delete': null
+		this.methods = { }
+		for (const method of allowed) {
+			this.methods[method] = null
 		}
 	}
 

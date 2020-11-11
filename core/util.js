@@ -1,5 +1,8 @@
 const AppRequest = require('./app-request.js')
+const fs = require('fs')
+const path = require('path')
 const AsyncFunction = (async () => { }).constructor
+const mime = require('mime')
 
 const executeEndpoint = (endpoint, appRequest) => {
 	return new Promise((resolve, reject) => {
@@ -13,13 +16,95 @@ const executeEndpoint = (endpoint, appRequest) => {
 			resolve(endpoint.action(appRequest, ...endpoint.arguments))
 		}
 	})
-	
+}
+
+const staticEndpoint = {
+	action: client => {
+		const filePath = path.join(
+			require.main.path, 
+			decodeURIComponent(client.req.url)
+				.replace(client.req.staticUrl, client.req.staticPath)
+				.replace(/[.]{2}/g, '')
+			)
+		
+		const exists = fs.existsSync(filePath)
+		const stats = exists ? fs.lstatSync(filePath) : null
+		if (exists && stats.isFile()) {
+			const mimeType = mime.getType(filePath)
+			if (mimeType.startsWith('video')) {
+				const total = stats.size
+				client.autoclose = false
+
+				if (client.req.headers.range) {
+					const range = client.req.headers.range.match(/(\d+)\-(\d+)?/)
+					
+					const start = parseInt(range[1], 10)
+					const end = range[2] ? parseInt(range[2], 10) : total - 1
+					if (end < total && end > start) {
+						const chunkSize = end - start + 1
+
+						const stream = fs.createReadStream(filePath, { start, end })
+						client.res.writeHead(206, { 
+							'Content-Range': `bytes ${start}-${end}/${total}`, 
+							'Accept-Ranges': 'bytes', 
+							'Content-Length': chunkSize, 
+							'Content-Type': mimeType 
+						})
+						stream.pipe(client.res)
+					} else {
+						client.status(416)
+						client.end()
+					}
+				} else {
+					client.res.writeHead(200, {
+						'Accept-Ranges': 'bytes', 
+						'Content-Length': total,
+						'Content-Type': mimeType
+					})
+					fs.createReadStream(filePath).pipe(client.res)
+				}
+			} else {
+				const content = fs.readFileSync(filePath)
+				client.end(content, mimeType)
+			}
+		} else {
+			client.sendError(404)
+		}
+	},
+  params: null,
+  arguments: [ ]
 }
 
 module.exports = {
   handler: (app, req, res) => {
-		const endpoint = app.endpoints.find(req)
-		const callsBeforeEndpoint = app.beforeEndpoint.find(req, true)
+		let endpoint
+		let callsBeforeEndpoint = []
+		let callsAfterEndpoint = []
+		let isStatic = false
+		const method = req.method.toLowerCase()
+
+		if (app.public[method] === undefined) {
+			app.getError(403).send(res)
+			return
+		}
+
+		for (let url in app.staticPaths) {
+			if (req.url.toLowerCase().startsWith(url)) {
+				req.staticPath = app.staticPaths[url]
+				req.staticUrl = url
+
+				isStatic = true
+				break
+			}
+		}
+
+		if (isStatic) {
+			endpoint = staticEndpoint
+		} else {
+			endpoint = app.endpoints.find(req)
+			callsBeforeEndpoint = app.beforeEndpoint.find(req, true)
+			callsAfterEndpoint = app.afterEndpoint.find(req, true)
+		}
 
     if (endpoint) {
       let body = ''
@@ -57,7 +142,7 @@ module.exports = {
 						await executeEndpoint(endpoint, appRequest) 
 					}
 
-					if (!res.finished) {
+					if (!res.finished && appRequest.autoclose) {
 						res.end()
 					}
 				} catch (e) {

@@ -1,3 +1,5 @@
 node_modules/
 views/
 package-lock.json
+endpoints/
+pnpm-lock.yaml

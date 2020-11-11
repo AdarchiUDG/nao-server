@@ -9,14 +9,17 @@ class AppRequest {
 		this.body = body
 		this.params = params
 		this.stopped = false
+		this.autoclose = true
 
+		this.code = 200
 		this.data = { }
+		this.headers = { }
 	}
 
 	send(content, mime = 'text/html; charset=utf-8') {
 		if (!this.res.finished) {
-			if (this.res._header === null) {
-				this.res.writeHead(200, { 'Content-Type': mime })
+			if (!this.res.headersSent) {
+				this.res.writeHead(this.code, { 'Content-type': mime, ...this.headers })
 			}
 			this.res.write(content)
 		}
@@ -38,8 +41,8 @@ class AppRequest {
 	}
 
 	status(code, headers = { }) {
-		headers = { 'Content-Type': 'text/html; charset=utf-8', ...headers }
-		this.res.writeHead(code, headers)
+		this.headers = { 'Content-Type': 'text/html; charset=utf-8', ...headers }
+		this.code = code
 
 		return this
 	}
